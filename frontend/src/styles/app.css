@@ -1,0 +1,175 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Inter", sans-serif;
+    font-optical-sizing: auto;
+    font-style: normal;
+    font-size: 19px;
+}
+
+body {
+    background-color: rgb(215, 215, 215);
+}
+
+.div-body {
+    display: flex;
+    align-items: start;
+    gap: 20px;
+    width: 100%;
+}
+
+.form {
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    gap: 10px;
+    box-shadow: rgb(127, 127, 127) 0px 0px 10px;
+    width: 400px;
+    align-items: center;
+    margin-left: 10px;
+}
+
+.tipodoc {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 7px;
+}
+
+.form-input {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0px;
+    width: 100%;
+}
+
+input,
+select,
+button {
+    text-align: center;
+    padding: 4px;
+    /* Aumenté el padding para más comodidad */
+    border-radius: 4px;
+    /* Bordes redondeados para un look más moderno */
+    border: 1px solid #ced4da;
+    /* Borde gris claro */
+    width: 100%;
+    background-color: rgb(240, 240, 240);
+}
+
+select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-color: rgb(240, 240, 240);
+    background-image: none;
+    text-align: center;
+}
+
+input:focus,
+select:focus {
+    border-color: #0066FF;
+    /* Color de borde azul al enfocar */
+    outline: none;
+    /* Eliminar borde por defecto */
+}
+
+button {
+    background-color: #4ea945;
+    /* Color de fondo azul */
+    color: white;
+    /* Texto blanco */
+    border: none;
+    /* Sin borde */
+    transition: background-color 0.2s;
+    /* Transición suave */
+}
+
+button:hover {
+    background-color: #378f2f;
+    /* Color al pasar el ratón */
+}
+
+.form-practicas {
+    width: 100%;
+    margin: 10px;
+}
+
+.table-practicas {
+    box-shadow: rgb(127, 127, 127) 0px 0px 10px;
+    width: 100%;
+}
+
+.div-comprobantes {
+    margin: 20px;
+}
+
+.table-practicas th {
+    padding: 10px;
+    text-align: center;
+    background-color: #0066FF;
+    /* Encabezado azul */
+    color: white;
+    /* Texto blanco en el encabezado */
+}
+
+.table-practicas td {
+    border: 1px solid white;
+    padding: 10px;
+    text-align: center;
+    color: black;
+    /* Texto blanco en celdas */
+    background-color: white;
+    /* Fondo negro para las filas */
+}
+
+.table-practicas .encabezado {
+    background-color: white;
+    /* Encabezado con fondo blanco */
+}
+
+.td-icon:hover {
+    color: #0066FF;
+    cursor: pointer;
+    text-shadow: 0px 0px 3px #98c1ff48;
+}
+
+.practicas-span:hover {
+    cursor: pointer;
+}
+
+.td-input {
+    background-color: rgb(240, 240, 240);
+    color: black;
+    border: none;
+    outline: none;
+    max-width: 200px;
+}
+
+/* Ocultar flechas en inputs numéricos para Webkit */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+    /* Eliminar margen */
+}
+
+.select-practicas {
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 10px;
+    box-shadow: rgb(127, 127, 127) 0px 0px 10px;
+}
+
+select:hover {
+    cursor: pointer;
+}

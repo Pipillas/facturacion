@@ -1,0 +1,73 @@
+.body-practicas {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 10px;
+    gap: 20px;
+}
+
+.nueva-practica {
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.nueva-practica button {
+    padding: 10px;
+    width: fit-content;
+}
+
+.modal-header h5 {
+    text-align: center;
+    width: 100%;
+}
+
+.modal-input {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: center;
+}
+
+.modal-input input,
+.modal-input select {
+    width: 300px;
+}
+
+.modal-body {
+    gap: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-content {
+    border-radius: 3px;
+    width: fit-content;
+}
+
+.modal-footer {
+    flex-wrap: nowrap;
+}
+
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    /* Fondo oscuro con opacidad */
+    z-index: 1040;
+    /* Asegúrate de que esté detrás del modal */
+}
+
+.modal {
+    z-index: 1050;
+    /* Asegúrate de que esté por encima del overlay */
+}
+
+.tr-practicas:hover {
+    cursor: pointer;
+    background-color: rgb(76, 76, 76);
+}

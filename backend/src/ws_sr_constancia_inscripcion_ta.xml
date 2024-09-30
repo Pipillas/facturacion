@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<loginTicketResponse version="1.0">
+    <header>
+        <source>CN=wsaa, O=AFIP, C=AR, SERIALNUMBER=CUIT 33693450239</source>
+        <destination>SERIALNUMBER=CUIT 30712465871, CN=guiraudo 2020</destination>
+        <uniqueId>2253616609</uniqueId>
+        <generationTime>2024-09-29T22:49:58.828-03:00</generationTime>
+        <expirationTime>2024-09-30T10:49:58.828-03:00</expirationTime>
+    </header>
+    <credentials>
+        <token>PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9InllcyI/Pgo8c3NvIHZlcnNpb249IjIuMCI+CiAgICA8aWQgc3JjPSJDTj13c2FhLCBPPUFGSVAsIEM9QVIsIFNFUklBTE5VTUJFUj1DVUlUIDMzNjkzNDUwMjM5IiB1bmlxdWVfaWQ9IjI4ODg5ODE2NDgiIGdlbl90aW1lPSIxNzI3NjYwOTM4IiBleHBfdGltZT0iMTcyNzcwNDE5OCIvPgogICAgPG9wZXJhdGlvbiB0eXBlPSJsb2dpbiIgdmFsdWU9ImdyYW50ZWQiPgogICAgICAgIDxsb2dpbiBlbnRpdHk9IjMzNjkzNDUwMjM5IiBzZXJ2aWNlPSJ3c19zcl9jb25zdGFuY2lhX2luc2NyaXBjaW9uIiB1aWQ9IlNFUklBTE5VTUJFUj1DVUlUIDMwNzEyNDY1ODcxLCBDTj1ndWlyYXVkbyAyMDIwIiBhdXRobWV0aG9kPSJjbXMiIHJlZ21ldGhvZD0iMjIiPgogICAgICAgICAgICA8cmVsYXRpb25zPgogICAgICAgICAgICAgICAgPHJlbGF0aW9uIGtleT0iMzA3MTI0NjU4NzEiIHJlbHR5cGU9IjQiLz4KICAgICAgICAgICAgPC9yZWxhdGlvbnM+CiAgICAgICAgPC9sb2dpbj4KICAgIDwvb3BlcmF0aW9uPgo8L3Nzbz4K</token>
+        <sign>VWlxpODnOD5fCRemrdJlxCy3OABmHE4uy3iBzSKK7YjaG0WLb0M9xRwsCQzVMiCKmRYxFhpxiTLkMbSN8KqBBrunc7CTal6MXOM9J75PK7lWgeSnU/ZC8HaPWwkzd9MxA24JY3wF6fn+tfYXFlJpQ3X6O57HoO0CghfgABybk8E=</sign>
+    </credentials>
+</loginTicketResponse>
