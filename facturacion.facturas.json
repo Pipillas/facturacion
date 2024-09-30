@@ -1,0 +1,192 @@
+[{
+  "_id": {
+    "$oid": "66fa37011098ec88d9addf7d"
+  },
+  "tipoDoc": "DNI",
+  "numDoc": "41896390",
+  "nombre": "MAS DAMIAN",
+  "medio": "DIGITAL",
+  "condicion": "CONSUMIDOR FINAL",
+  "domicilio": "",
+  "telefono": "",
+  "practicas": [
+    {
+      "value": "2",
+      "label": "PRUEBA",
+      "iva": "21",
+      "valor": 100,
+      "cantidad": 1,
+      "total": 100
+    }
+  ],
+  "total": 100,
+  "pathO": "FB-13423-O.pdf",
+  "pathD": "FB-13423-D.pdf",
+  "createdAt": {
+    "$date": "2024-09-30T05:28:33.536Z"
+  },
+  "updatedAt": {
+    "$date": "2024-09-30T05:28:33.536Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "66fa3eb0e48c8a53b8890d53"
+  },
+  "tipoDoc": "DNI",
+  "numDoc": "0",
+  "nombre": "",
+  "medio": "DIGITAL",
+  "condicion": "CONSUMIDOR FINAL",
+  "domicilio": "",
+  "telefono": "",
+  "practicas": [
+    {
+      "value": "2",
+      "label": "PRUEBA",
+      "iva": "21",
+      "valor": 50,
+      "cantidad": 3,
+      "total": 150
+    }
+  ],
+  "total": 150,
+  "pathO": "FB-13424-O.pdf",
+  "pathD": "FB-13424-D.pdf",
+  "createdAt": {
+    "$date": "2024-09-30T06:01:20.312Z"
+  },
+  "updatedAt": {
+    "$date": "2024-09-30T06:01:20.312Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "66fa682ff1aaae6931a3e2e1"
+  },
+  "tipoDoc": "DNI",
+  "numDoc": "28147673",
+  "nombre": "RISUEÑO GLADYS",
+  "medio": "EFECTIVO",
+  "condicion": "CONSUMIDOR FINAL",
+  "domicilio": "",
+  "telefono": "",
+  "practicas": [
+    {
+      "value": "340205",
+      "label": "PANORAMICA DENTAL",
+      "iva": "21",
+      "valor": 20000,
+      "cantidad": 1,
+      "total": 20000
+    }
+  ],
+  "total": 20000,
+  "pathO": "FB-13425-O.pdf",
+  "pathD": "FB-13425-D.pdf",
+  "createdAt": {
+    "$date": "2024-09-30T08:58:23.379Z"
+  },
+  "updatedAt": {
+    "$date": "2024-09-30T08:58:23.379Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "66fa6bb11bcc5393b4445c7e"
+  },
+  "tipoDoc": "DNI",
+  "numDoc": "0",
+  "nombre": "",
+  "medio": "DIGITAL",
+  "condicion": "CONSUMIDOR FINAL",
+  "domicilio": "",
+  "telefono": "",
+  "practicas": [
+    {
+      "value": "1",
+      "label": "PRUEBA",
+      "iva": "21",
+      "valor": 200,
+      "cantidad": 1,
+      "total": 200
+    }
+  ],
+  "total": 200,
+  "pathO": "FB-13426-O.pdf",
+  "pathD": "FB-13426-D.pdf",
+  "createdAt": {
+    "$date": "2024-09-30T09:13:21.252Z"
+  },
+  "updatedAt": {
+    "$date": "2024-09-30T09:13:21.252Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "66fa6c191bcc5393b4445c99"
+  },
+  "tipoDoc": "DNI",
+  "numDoc": "0",
+  "nombre": "",
+  "medio": "DIGITAL",
+  "condicion": "CONSUMIDOR FINAL",
+  "domicilio": "",
+  "telefono": "",
+  "practicas": [
+    {
+      "value": "1",
+      "label": "PRUEBA",
+      "iva": "21",
+      "valor": 1000,
+      "cantidad": 1,
+      "total": 1000
+    }
+  ],
+  "total": 1000,
+  "pathO": "FB-13427-O.pdf",
+  "pathD": "FB-13427-D.pdf",
+  "createdAt": {
+    "$date": "2024-09-30T09:15:05.552Z"
+  },
+  "updatedAt": {
+    "$date": "2024-09-30T09:15:05.552Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "66fa6d171bcc5393b4445cb7"
+  },
+  "tipoDoc": "DNI",
+  "numDoc": "0",
+  "nombre": "",
+  "medio": "DIGITAL",
+  "condicion": "CONSUMIDOR FINAL",
+  "domicilio": "",
+  "telefono": "",
+  "practicas": [
+    {
+      "value": "1",
+      "label": "PRUEBA",
+      "iva": "21",
+      "valor": 10,
+      "cantidad": 1,
+      "total": 10
+    }
+  ],
+  "total": 10,
+  "pathO": "FB-13428-O.pdf",
+  "pathD": "FB-13428-D.pdf",
+  "createdAt": {
+    "$date": "2024-09-30T09:19:19.489Z"
+  },
+  "updatedAt": {
+    "$date": "2024-09-30T09:19:19.489Z"
+  },
+  "__v": 0
+}]
