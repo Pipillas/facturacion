@@ -611,6 +611,7 @@ io.on("connection", (socket) => {
 
 // Sirve los archivos estáticos desde la carpeta dist (compilada por Vite)
 const distPath = path.join(__dirname, "dist");
+app.use(express.static(distPath));
 // Maneja todas las rutas del frontend para que Vite las gestione
 app.get("*", (req, res) => {
     res.sendFile(path.join(distPath, "index.html"));
