@@ -47,8 +47,8 @@ function Comprobantes() {
                                 <td>{comp.nombre}</td>
                                 <td><NumericFormat displayType='text' value={comp.numDoc} thousandSeparator="." decimalSeparator=',' /></td>
                                 <td><NumericFormat prefix='$ ' displayType='text' value={comp.total} thousandSeparator="." decimalSeparator=',' /></td>
-                                <td style={{ width: '60px' }} onClick={() => window.open(`http://localhost:3000/${comp.pathO}`, '_blank')} className="td-icon">ORIGINAL</td>
-                                <td style={{ width: '60px' }} onClick={() => window.open(`http://localhost:3000/${comp.pathD}`, '_blank')} className="td-icon">DUPLICADO</td>
+                                <td style={{ width: '60px' }} onClick={() => window.open(`http://192.168.100.13:3000/${comp.pathO}`, '_blank')} className="td-icon">ORIGINAL</td>
+                                <td style={{ width: '60px' }} onClick={() => window.open(`http://192.168.100.13:3000/${comp.pathD}`, '_blank')} className="td-icon">DUPLICADO</td>
                             </tr>
                         ))
                     }

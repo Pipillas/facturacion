@@ -11,7 +11,7 @@ import App from './routes/App.jsx'
 import Practicas from './routes/Practicas.jsx';
 import Comprobantes from './routes/Comprobantes.jsx';
 
-export const socket = io('http://192.168.0.26:3000');
+export const socket = io('http://192.168.100.13:3000');
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

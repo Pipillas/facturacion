@@ -9,6 +9,7 @@ const path = require("path");
 const { chromium } = require('playwright');
 const fs = require('fs');
 const qr = require('qr-image');
+const { print } = require("pdf-to-printer");
 
 const CUIT = 30712465871;
 
@@ -494,8 +495,11 @@ async function crearPDF(copia, codigoFactura, numeroComprobante, docNro, condIva
         printBackground: true,
     });
     await browser.close();
+    if(copia === 'DUPLICADO'){
+        await print(pathPDF);
+    }
     return comprobanteNombre;
-}
+};
 
 io.on("connection", (socket) => {
     socket.on("guardar-practica", async (practica) => {
