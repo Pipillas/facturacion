@@ -105,10 +105,6 @@ button:hover {
     width: 100%;
 }
 
-.div-comprobantes {
-    margin: 20px;
-}
-
 .table-practicas th {
     padding: 10px;
     text-align: center;
@@ -172,4 +168,39 @@ input[type="number"]::-webkit-outer-spin-button {
 
 select:hover {
     cursor: pointer;
+}
+
+.div-facturar {
+    display: flex;
+    flex-direction: row;
+    justify-content: end;
+    align-items: flex-end;
+    margin-top: 20px;
+}
+
+.total-facturar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+}
+
+.total-facturar {
+    text-wrap: nowrap;
+}
+
+.total {
+    background-color: white;
+    padding: 10px;
+}
+
+.span-total {
+    background-color: #0066FF;
+    padding: 10px;
+    color: white;
+}
+
+.boton-facturar {
+    padding: 10px;
+    border-radius: 0px;
 }

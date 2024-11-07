@@ -138,6 +138,13 @@ function App() {
     }
   };
 
+  // Calcula el total de las prácticas seleccionadas
+  const calculateTotal = () => {
+    return selectedPracticas.reduce((sum, practica) => {
+      return sum + practica.valor * practica.cantidad;
+    }, 0);
+  };
+
   return (
     <div className="div-body">
       <div className="form">
@@ -223,9 +230,6 @@ function App() {
             <span className="slider round"></span>
           </label>
         </div>
-        <div className="form-input">
-          <button onClick={facturar} disabled={isProcessing}>FACTURAR</button>
-        </div>
       </div>
       <div className="form-practicas">
         <table className="table-practicas">
@@ -304,6 +308,24 @@ function App() {
             styles={selectStyles}
             value={null}
           />
+        </div>
+        <div className="div-facturar">
+          <div className="total-facturar">
+            <div>
+              <span className="span-total">
+                TOTAL:
+              </span>
+              <NumericFormat
+                className="total"
+                displayType='text'
+                value={calculateTotal()}
+                thousandSeparator='.'
+                decimalSeparator=','
+                prefix='$'
+              />
+            </div>
+            <button className="boton-facturar" onClick={facturar} disabled={isProcessing}>FACTURAR</button>
+          </div>
         </div>
       </div>
     </div>

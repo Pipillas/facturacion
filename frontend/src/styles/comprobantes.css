@@ -1,0 +1,41 @@
+.div-comprobantes {
+    margin: 20px;
+}
+
+.outer-pagination {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    margin: 20px;
+}
+
+.pagination-button {
+    padding: 5px;
+    width: fit-content;
+    background-color: transparent;
+    color: #4ea945;
+    border-radius: 0px;
+}
+
+.pagination-button i {
+    font-size: 25px;
+    font-weight: bold;
+}
+
+.pagination-button:hover {
+    background-color: transparent;
+    color: #378f2f;
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    justify-content: space-evenly;
+}
+
+.pagination-span {
+    width: 100px;
+    text-align: center;
+}
