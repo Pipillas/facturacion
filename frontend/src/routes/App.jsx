@@ -30,7 +30,7 @@ function App() {
     tipoDoc: 'DNI',
     numDoc: '',
     nombre: '',
-    medio: 'DIGITAL',
+    medio: 'QR',
     condicion: 'CONSUMIDOR FINAL',
     domicilio: '',
     telefono: '',
@@ -186,8 +186,14 @@ function App() {
         <div className="form-input">
           <span>MEDIO DE PAGO</span>
           <select name="medio" onChange={handleInputChange}>
-            <option value="DIGITAL">DIGITAL</option>
+            <option value="QR">QR</option>
             <option value="EFECTIVO">EFECTIVO</option>
+            <option value="TRANSFERENCIA">TRANSFERENCIA</option>
+            <option value="TARJETA VISA">TARJETA VISA</option>
+            <option value="TARJETA MAESTRO/MASTERCARD">TARJETA MAESTRO/MASTERCARD</option>
+            <option value="TARJETA NARANJA">TARJETA NARANJA</option>
+            <option value="TARJETA AMERICAN EXPRESS">TARJETA AMERICAN EXPRESS</option>
+            <option value="OTRO">OTRO</option>
           </select>
         </div>
         <div className="form-input">
