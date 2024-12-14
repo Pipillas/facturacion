@@ -88,7 +88,7 @@ function App() {
       return;
     }
 
-    if (datos.tipoDoc === 'CUIT' && (datos.numDoc !== 11)) {
+    if (datos.tipoDoc === 'CUIT' && datos.numDoc.toString().length !== 11) {
       alert('No es posible facturar con un CUIT distinto a 11 dígitos');
       setIsProcessing(false);
       return;
