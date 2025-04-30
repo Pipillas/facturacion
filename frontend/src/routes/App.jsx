@@ -1,6 +1,6 @@
 import '../styles/app.css';
 import '../styles/toggleswitch.css';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Select from 'react-select';
 import { socket } from '../main';
 import { NumericFormat } from 'react-number-format';

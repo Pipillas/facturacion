@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { NumericFormat } from 'react-number-format';
 import '../styles/practicas.css';
 
