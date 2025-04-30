@@ -140,14 +140,14 @@ class AfipService {
         }
     }
 
-    async facturaB(monto, docNro) {
+    async facturaB(monto, docNro, condicion) {
         await this.initWsfe();
         const CbteTipo = 6;
         const ultimoAutorizado = await this.ultimoAutorizado(this.ptoVta, CbteTipo);
         const fecha = this.getCurrentDate();
         const { importe_total, importe_gravado, importe_iva } = this.calculateImportes(monto);
         const docTipo = docNro.toString().length === 11 ? 80 : docNro !== 0 ? 96 : 99;
-        const factura = this.buildFactura(CbteTipo, docNro, ultimoAutorizado, fecha, importe_total, importe_gravado, importe_iva, docTipo);
+        const factura = this.buildFactura(CbteTipo, docNro, ultimoAutorizado, fecha, importe_total, importe_gravado, importe_iva, docTipo, condicion);
         const response = await this.wsfe.FECAESolicitar(factura);
         console.dir(response, { depth: null });
         return {
@@ -205,6 +205,14 @@ class AfipService {
         }
     }
 
+    async getCondicionIvaReceptor() {
+        await this.initWsfe();
+        const response = await this.wsfe.FEParamGetCondicionIvaReceptor();
+        console.dir(response, { depth: null });
+    };
+
+
+
     getCurrentDate() {
         return new Date(Date.now() - ((new Date()).getTimezoneOffset() * 60000)).toISOString().split('T')[0];
     }
@@ -216,63 +224,80 @@ class AfipService {
         return { importe_total, importe_gravado, importe_iva };
     }
 
-    buildFactura(CbteTipo, docNro, ultimoAutorizado, fecha, importe_total, importe_gravado, importe_iva, docTipo = 80, cbteAsoc = null) {
+    buildFactura(CbteTipo, docNro, ultimoAutorizado, fecha, importe_total, importe_gravado, importe_iva, docTipo = 80, condicion, cbteAsoc = null) {
 
-        // ESTO ES PARA EL FchServDesde, FchServHasta y FchVtoPago
+        // ============ Fechas ============
         const today = new Date();
-        const year = today.getFullYear();
-        const month = (today.getMonth() + 1).toString().padStart(2, "0");
-        const day = today.getDate().toString().padStart(2, "0");
-        const formattedDate = parseInt(year + month + day);
-        const fecha_servicio_desde = formattedDate;
-        const fecha_servicio_hasta = formattedDate;
-        const fecha_vencimiento_pago = formattedDate;
+        const y = today.getFullYear();
+        const m = String(today.getMonth() + 1).padStart(2, "0");
+        const d = String(today.getDate()).padStart(2, "0");
+        const formattedDate = parseInt(y + m + d);
+        const FchServDesde = formattedDate;
+        const FchServHasta = formattedDate;
+        const FchVtoPago = formattedDate;
 
-        const factura = {
+        // ============ Ajuste según condición ============
+        let Concepto = 3;
+        let ImpTotal = importe_total;
+        let ImpNeto = importe_gravado;
+        let ImpOpEx = 0.00;
+        let ImpIVA = importe_iva;
+        let IvaNodo = {
+            AlicIva: [{
+                Id: 5,             // 21% (por ejemplo); cámbialo si facturas otro alícuota
+                BaseImp: importe_gravado,
+                Importe: importe_iva,
+            }]
+        };
+
+        let CondicionIVAReceptorId = 5;
+
+        if (condicion === "IVA EXENTO") {
+            ImpTotal = importe_total;
+            ImpNeto = 0.00;           // no hay base gravada
+            ImpOpEx = importe_total;  // todo es exento
+            ImpIVA = 0.00;
+            IvaNodo = null;           // **omitimos** el nodo Iva
+            CondicionIVAReceptorId = 4;
+        }
+
+        // ============ Estructura del detalle ============
+        const detalle = {
+            Concepto,
+            DocTipo: docTipo,
+            DocNro: docNro,
+            CbteDesde: ultimoAutorizado + 1,
+            CbteHasta: ultimoAutorizado + 1,
+            CbteFch: parseInt(fecha.replace(/-/g, "")),
+            FchServDesde,
+            FchServHasta,
+            FchVtoPago,
+            ImpTotal,
+            ImpTotConc: 0.00,
+            ImpNeto,
+            ImpOpEx,
+            ImpTrib: 0.00,
+            ImpIVA,
+            MonId: "PES",
+            MonCotiz: 1,
+            CondicionIVAReceptorId,
+            ...(IvaNodo && { Iva: IvaNodo }),
+            ...(cbteAsoc && {
+                CbtesAsoc: { CbteAsoc: [cbteAsoc] }
+            })
+        };
+
+        // ============ Retorno completo ============
+        return {
             FeCAEReq: {
                 FeCabReq: {
                     CantReg: 1,
                     PtoVta: this.ptoVta,
                     CbteTipo,
                 },
-                FeDetReq: {
-                    FECAEDetRequest: {
-                        Concepto: 3,
-                        DocTipo: docTipo,
-                        DocNro: docNro,
-                        CbteDesde: ultimoAutorizado + 1,
-                        CbteHasta: ultimoAutorizado + 1,
-                        CbteFch: parseInt(fecha.replace(/-/g, '')),
-                        FchServDesde: fecha_servicio_desde,
-                        FchServHasta: fecha_servicio_hasta,
-                        FchVtoPago: fecha_vencimiento_pago,
-                        ImpTotal: importe_total,
-                        ImpTotConc: 0.00,
-                        ImpNeto: importe_gravado,
-                        ImpOpEx: 0.00,
-                        ImpTrib: 0.00,
-                        ImpIVA: importe_iva,
-                        MonId: "PES",
-                        MonCotiz: 1,
-                        Iva: {
-                            AlicIva: [
-                                {
-                                    Id: 5,
-                                    BaseImp: importe_gravado,
-                                    Importe: importe_iva,
-                                },
-                            ],
-                        },
-                        ...(cbteAsoc && {
-                            CbtesAsoc: {
-                                CbteAsoc: [cbteAsoc]
-                            }
-                        }),
-                    }
-                }
+                FeDetReq: { FECAEDetRequest: detalle }
             }
         };
-        return factura;
     }
 }
 

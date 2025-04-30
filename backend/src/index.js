@@ -25,6 +25,8 @@ const io = new Server(server, {
     },
 });
 
+//afipService.getTiposIva();
+
 // Define la carpeta desde donde se servirán los archivos
 const directoryPath = path.join(__dirname, 'comprobantes');
 
@@ -496,7 +498,7 @@ async function crearPDF(copia, codigoFactura, numeroComprobante, docNro, condIva
         printBackground: true,
     });
     await browser.close();
-    if(copia === 'DUPLICADO'){
+    if (copia === 'DUPLICADO') {
         await print(pathPDF);
     }
     return comprobanteNombre;
@@ -525,7 +527,7 @@ io.on("connection", (socket) => {
             if (datos.numDoc === "") {
                 datos.numDoc = 0;
             }
-            let response = await afipService.facturaB(datos.total, datos.numDoc);
+            let response = await afipService.facturaB(datos.total, datos.numDoc, datos.condicion);
             const today = new Date();
             const year = today.getFullYear();
             const month = (today.getMonth() + 1).toString().padStart(2, "0");
@@ -615,25 +617,25 @@ io.on("connection", (socket) => {
 
     socket.on('filter-comprobantes', async ({ startDate, endDate }) => {
         const query = {};
-    
+
         if (startDate && endDate) {
             const endOfDay = new Date(endDate);
             endOfDay.setHours(23, 59, 59, 999);  // Incluye hasta el último milisegundo del día final
-    
+
             query.createdAt = { $gte: new Date(startDate), $lte: endOfDay };
         } else if (startDate) {
             query.createdAt = { $gte: new Date(startDate) };
         } else if (endDate) {
             const endOfDay = new Date(endDate);
             endOfDay.setHours(23, 59, 59, 999);  // Incluye el día completo si solo hay fecha de fin
-    
+
             query.createdAt = { $lte: endOfDay };
         }
-    
+
         const comprobantes = await Comprobante.find(query).sort({ createdAt: -1 });
         socket.emit('response-comprobantes', comprobantes);
-    });    
-    
+    });
+
 });
 
 
@@ -663,14 +665,14 @@ app.get('/export-comprobantes', async (req, res) => {
     const worksheet = workbook.addWorksheet('Comprobantes');
 
     // Definir los encabezados de las columnas
-worksheet.columns = [
-    { header: 'Fecha', key: 'createdAt', width: 20 },
-    { header: 'Comprobante', key: 'pathO', width: 30 },
-    { header: 'Cliente', key: 'nombre', width: 30 },
-    { header: 'Documento', key: 'numDoc', width: 20 },
-    { header: 'Medio de Pago', key: 'medio', width: 20 },  // Nueva columna para el medio de pago
-    { header: 'Total', key: 'total', width: 15 },
-];
+    worksheet.columns = [
+        { header: 'Fecha', key: 'createdAt', width: 20 },
+        { header: 'Comprobante', key: 'pathO', width: 30 },
+        { header: 'Cliente', key: 'nombre', width: 30 },
+        { header: 'Documento', key: 'numDoc', width: 20 },
+        { header: 'Medio de Pago', key: 'medio', width: 20 },  // Nueva columna para el medio de pago
+        { header: 'Total', key: 'total', width: 15 },
+    ];
 
 
     // Agregar los datos de los comprobantes
@@ -684,7 +686,7 @@ worksheet.columns = [
             total: comp.total
         });
     });
-    
+
 
     // Configurar las cabeceras de la respuesta para la descarga del archivo Excel
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
