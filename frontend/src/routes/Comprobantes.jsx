@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { NumericFormat } from 'react-number-format';
 import { IP, socket } from '../main';
 import DatePicker from 'react-datepicker';
@@ -61,24 +61,22 @@ function Comprobantes() {
 
     return (
         <div>
-<div className="date-filter">
-    <DatePicker
-        selected={startDate}
-        onChange={(date) => setStartDate(date)}
-        dateFormat="dd/MM/yyyy"
-        placeholderText="Fecha Inicio"
-    />
-    <DatePicker
-        selected={endDate}
-        onChange={(date) => setEndDate(date)}
-        dateFormat="dd/MM/yyyy"
-        placeholderText="Fecha Fin"
-    />
-
-    <button className="filter-button" onClick={handleFilter}>Filtrar</button>
-    <button className="export-button" onClick={downloadExcel}>Exportar a Excel</button>
-</div>
-
+            <div className="date-filter">
+                <DatePicker
+                    selected={startDate}
+                    onChange={(date) => setStartDate(date)}
+                    dateFormat="dd/MM/yyyy"
+                    placeholderText="Fecha Inicio"
+                />
+                <DatePicker
+                    selected={endDate}
+                    onChange={(date) => setEndDate(date)}
+                    dateFormat="dd/MM/yyyy"
+                    placeholderText="Fecha Fin"
+                />
+                <button className="filter-button" onClick={handleFilter}>Filtrar</button>
+                <button className="export-button" onClick={downloadExcel}>Exportar a Excel</button>
+            </div>
             <div className="div-comprobantes">
                 {/* Pagination Controls */}
                 <div className="outer-pagination">
@@ -107,7 +105,19 @@ function Comprobantes() {
                                     <td>{new Date(comp.createdAt).toLocaleDateString()}</td>
                                     <td>{comp.pathO.replace('-O.pdf', '')}</td>
                                     <td>{comp.nombre}</td>
-                                    <td><NumericFormat displayType='text' value={comp.numDoc} thousandSeparator="." decimalSeparator=',' /></td>
+                                    <td>
+                                        {String(comp.numDoc).length === 11
+                                            ? comp.numDoc
+                                            : (
+                                                <NumericFormat
+                                                    displayType="text"
+                                                    value={comp.numDoc}
+                                                    thousandSeparator="."
+                                                    decimalSeparator=","
+                                                />
+                                            )
+                                        }
+                                    </td>
                                     <td><NumericFormat prefix='$ ' displayType='text' value={comp.total} thousandSeparator="." decimalSeparator=',' /></td>
                                     <td style={{ width: '60px' }} onClick={() => window.open(`${IP}/${comp.pathO}`, '_blank')} className="td-icon">ORIGINAL</td>
                                     <td style={{ width: '60px' }} onClick={() => window.open(`${IP}/${comp.pathD}`, '_blank')} className="td-icon">DUPLICADO</td>
@@ -116,7 +126,6 @@ function Comprobantes() {
                         }
                     </tbody>
                 </table>
-
                 {/* Pagination Controls */}
                 <div className="outer-pagination">
                     <div className="pagination">
