@@ -556,8 +556,14 @@ io.on("connection", (socket) => {
                 { type: "png" }
             );
             qr_svg.pipe(fs.createWriteStream(path.join(__dirname, 'images', 'qr-afip.png')));
-            datos.pathO = await crearPDF('ORIGINAL', 6, response.numeroComprobante, datos.numDoc, datos.condicion, datos.nombre, datos.domicilio, datos.practicas, response.importe_total, response.importe_gravado, response.importe_iva, response.CAE, response.vtoCAE);
-            datos.pathD = await crearPDF('DUPLICADO', 6, response.numeroComprobante, datos.numDoc, datos.condicion, datos.nombre, datos.domicilio, datos.practicas, response.importe_total, response.importe_gravado, response.importe_iva, response.CAE, response.vtoCAE);
+            try {
+                datos.pathO = await crearPDF('ORIGINAL', 6, response.numeroComprobante, datos.numDoc, datos.condicion, datos.nombre, datos.domicilio, datos.practicas, response.importe_total, response.importe_gravado, response.importe_iva, response.CAE, response.vtoCAE);
+                datos.pathD = await crearPDF('DUPLICADO', 6, response.numeroComprobante, datos.numDoc, datos.condicion, datos.nombre, datos.domicilio, datos.practicas, response.importe_total, response.importe_gravado, response.importe_iva, response.CAE, response.vtoCAE);
+            } catch (error) {
+                console.log(error);
+            }
+            datos.cae = response.CAE;
+            datos.vtoCAE = response.vtoCAE;
             await Comprobante.create(datos);
             //FACTURA B
         } else if (

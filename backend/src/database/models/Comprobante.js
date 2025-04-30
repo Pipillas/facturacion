@@ -39,6 +39,12 @@ const Factura = new Schema(
         pathD: {
             type: String,
         },
+        cae: {
+            type: String,
+        },
+        vtoCAE: {
+            type: String,
+        }
     },
     { timestamps: true }
 );
