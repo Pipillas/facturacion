@@ -10,6 +10,7 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const qr = require('qr-image');
 const { print } = require("pdf-to-printer");
+const ExcelJS = require('exceljs');
 
 const CUIT = 30712465871;
 
@@ -611,7 +612,90 @@ io.on("connection", (socket) => {
         const comprobantes = await Comprobante.find().sort({ createdAt: -1 });
         socket.emit('response-comprobantes', comprobantes);
     });
+
+    socket.on('filter-comprobantes', async ({ startDate, endDate }) => {
+        const query = {};
+    
+        if (startDate && endDate) {
+            const endOfDay = new Date(endDate);
+            endOfDay.setHours(23, 59, 59, 999);  // Incluye hasta el último milisegundo del día final
+    
+            query.createdAt = { $gte: new Date(startDate), $lte: endOfDay };
+        } else if (startDate) {
+            query.createdAt = { $gte: new Date(startDate) };
+        } else if (endDate) {
+            const endOfDay = new Date(endDate);
+            endOfDay.setHours(23, 59, 59, 999);  // Incluye el día completo si solo hay fecha de fin
+    
+            query.createdAt = { $lte: endOfDay };
+        }
+    
+        const comprobantes = await Comprobante.find(query).sort({ createdAt: -1 });
+        socket.emit('response-comprobantes', comprobantes);
+    });    
+    
 });
+
+
+// Aquí agregas la nueva ruta para exportar comprobantes
+app.get('/export-comprobantes', async (req, res) => {
+    const { startDate, endDate } = req.query;
+    const query = {};
+
+    // Ajuste para incluir todo el día final
+    if (startDate && endDate) {
+        const endOfDay = new Date(endDate);
+        endOfDay.setHours(23, 59, 59, 999);  // Incluye hasta el último milisegundo del día
+
+        query.createdAt = { $gte: new Date(startDate), $lte: endOfDay };
+    } else if (startDate) {
+        query.createdAt = { $gte: new Date(startDate) };
+    } else if (endDate) {
+        const endOfDay = new Date(endDate);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        query.createdAt = { $lte: endOfDay };
+    }
+
+    const comprobantes = await Comprobante.find(query).sort({ createdAt: 1 });
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Comprobantes');
+
+    // Definir los encabezados de las columnas
+worksheet.columns = [
+    { header: 'Fecha', key: 'createdAt', width: 20 },
+    { header: 'Comprobante', key: 'pathO', width: 30 },
+    { header: 'Cliente', key: 'nombre', width: 30 },
+    { header: 'Documento', key: 'numDoc', width: 20 },
+    { header: 'Medio de Pago', key: 'medio', width: 20 },  // Nueva columna para el medio de pago
+    { header: 'Total', key: 'total', width: 15 },
+];
+
+
+    // Agregar los datos de los comprobantes
+    comprobantes.forEach(comp => {
+        worksheet.addRow({
+            createdAt: new Date(comp.createdAt).toLocaleDateString(),
+            pathO: comp.pathO.replace('-O.pdf', ''),
+            nombre: comp.nombre,
+            numDoc: comp.numDoc,
+            medio: comp.medio,  // Aquí agregas el medio de pago
+            total: comp.total
+        });
+    });
+    
+
+    // Configurar las cabeceras de la respuesta para la descarga del archivo Excel
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename=comprobantes.xlsx');
+
+    // Escribir el archivo y finalizar la respuesta
+    await workbook.xlsx.write(res);
+    res.end();
+});
+
+
 
 // Sirve los archivos estáticos desde la carpeta dist (compilada por Vite)
 const distPath = path.join(__dirname, "dist");

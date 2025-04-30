@@ -39,3 +39,35 @@
     width: 100px;
     text-align: center;
 }
+
+.date-filter {
+    display: flex;
+    align-items: center;
+    gap: 15px;  /* Espaciado entre los elementos */
+    margin: 20px 0;
+    justify-content: center;  /* Centra los elementos */
+    flex-wrap: nowrap;  /* Mantiene todo en una sola línea */
+}
+
+.filter-button, .export-button {
+    padding: 8px 16px;
+    background-color: #4ea945;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+    height: 38px;
+    white-space: nowrap;  /* Evita que el texto se divida en varias líneas */
+    width: auto;  /* El ancho se adapta al contenido */
+    max-width: 200px;  /* Incrementa el ancho máximo para textos largos */
+}
+
+.export-button {
+    max-width: 220px;  /* Da más espacio específicamente al botón "Exportar a Excel" */
+}
+
+.filter-button:hover, .export-button:hover {
+    background-color: #378f2f;
+}
