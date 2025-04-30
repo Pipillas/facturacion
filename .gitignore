@@ -1,2 +1,5 @@
 backend/node_modules
 frontend/node_modules
+backend/src/comprobantes
+backend/src/images
+backend/src/index.html
