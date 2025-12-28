@@ -102,62 +102,108 @@ class AfipService {
         return ta;
     }
 
+    async retryIfConnReset(fn, retries = 3, label = "AFIP call") {
+        for (let i = 0; i < retries; i++) {
+            try {
+                return await fn();
+            } catch (err) {
+                if (err.code === "ECONNRESET" && i < retries - 1) {
+                    console.warn(
+                        `${label} falló con ECONNRESET. Reintento ${i + 1}/${retries}`
+                    );
+                    await new Promise((res) => setTimeout(res, 500));
+                } else {
+                    throw err;
+                }
+            }
+        }
+    }
+
     async getTiposIva() {
         await this.initWsfe();
-        const response = await this.wsfe.FEParamGetTiposIva({});
+        const response = await this.retryIfConnReset(
+            () => this.wsfe.FEParamGetTiposIva({}),
+            3,
+            "FEParamGetTiposIva"
+        );
         console.dir(response, { depth: null });
     }
 
     async getPersona(cuit) {
         await this.initWspci();
-        const response = await this.wspci.getPersona_v2({
-            cuitRepresentada: this.CUIT,
-            idPersona: cuit
-        });
+        const response = await this.retryIfConnReset(
+            () =>
+                this.wspci.getPersona_v2({
+                    cuitRepresentada: this.CUIT,
+                    idPersona: cuit,
+                }),
+            3,
+            "getPersona_v2"
+        );
         return response;
     }
 
     async ultimoAutorizado(PtoVta, CbteTipo) {
         await this.initWsfe();
-        const response = await this.wsfe.FECompUltimoAutorizado({ PtoVta, CbteTipo });
+        const response = await this.retryIfConnReset(
+            () => this.wsfe.FECompUltimoAutorizado({ PtoVta, CbteTipo }),
+            3,
+            "FECompUltimoAutorizado"
+        );
         return response.FECompUltimoAutorizadoResult.CbteNro;
     }
 
     async facturaA(monto, cuit) {
-        await this.initWsfe();
-        const CbteTipo = 1;
-        const ultimoAutorizado = await this.ultimoAutorizado(this.ptoVta, CbteTipo);
-        const fecha = this.getCurrentDate();
-        const { importe_total, importe_gravado, importe_iva } = this.calculateImportes(monto);
-        const factura = this.buildFactura(CbteTipo, cuit, ultimoAutorizado, fecha, importe_total, importe_gravado, importe_iva);
-        const response = await this.wsfe.FECAESolicitar(factura);
-        console.dir(response, { depth: null });
-        return {
-            CAE: response.FECAESolicitarResult.FeDetResp.FECAEDetResponse[0].CAE,
-            vtoCAE: response.FECAESolicitarResult.FeDetResp.FECAEDetResponse[0].CAEFchVto,
-            numeroComprobante: ultimoAutorizado + 1,
-            docTipo: 80,
+        try {
+            await this.initWsfe();
+            const CbteTipo = 1;
+            const ultimoAutorizado = await this.ultimoAutorizado(this.ptoVta, CbteTipo);
+            const fecha = this.getCurrentDate();
+            const { importe_total, importe_gravado, importe_iva } = this.calculateImportes(monto);
+            const factura = this.buildFactura(CbteTipo, cuit, ultimoAutorizado, fecha, importe_total, importe_gravado, importe_iva);
+            const response = await this.retryIfConnReset(
+                () => this.wsfe.FECAESolicitar(factura),
+                3,
+                "FECAESolicitar (facturaA)"
+            );
+            return {
+                CAE: response.FECAESolicitarResult.FeDetResp.FECAEDetResponse[0].CAE,
+                vtoCAE: response.FECAESolicitarResult.FeDetResp.FECAEDetResponse[0].CAEFchVto,
+                numeroComprobante: ultimoAutorizado + 1,
+                docTipo: 80,
+            };
+        } catch (error) {
+            console.error('Error en afipService.facturaA:', error.message);
+            throw error;
         }
     }
 
     async facturaB(monto, docNro, condicion) {
-        await this.initWsfe();
-        const CbteTipo = 6;
-        const ultimoAutorizado = await this.ultimoAutorizado(this.ptoVta, CbteTipo);
-        const fecha = this.getCurrentDate();
-        const { importe_total, importe_gravado, importe_iva } = this.calculateImportes(monto);
-        const docTipo = docNro.toString().length === 11 ? 80 : docNro !== 0 ? 96 : 99;
-        const factura = this.buildFactura(CbteTipo, docNro, ultimoAutorizado, fecha, importe_total, importe_gravado, importe_iva, docTipo, condicion);
-        const response = await this.wsfe.FECAESolicitar(factura);
-        console.dir(response, { depth: null });
-        return {
-            CAE: response.FECAESolicitarResult.FeDetResp.FECAEDetResponse[0].CAE,
-            vtoCAE: response.FECAESolicitarResult.FeDetResp.FECAEDetResponse[0].CAEFchVto,
-            numeroComprobante: ultimoAutorizado + 1,
-            docTipo,
-            importe_total,
-            importe_gravado,
-            importe_iva,
+        try {
+            await this.initWsfe();
+            const CbteTipo = 6;
+            const ultimoAutorizado = await this.ultimoAutorizado(this.ptoVta, CbteTipo);
+            const fecha = this.getCurrentDate();
+            const { importe_total, importe_gravado, importe_iva } = this.calculateImportes(monto);
+            const docTipo = docNro.toString().length === 11 ? 80 : docNro !== 0 ? 96 : 99;
+            const factura = this.buildFactura(CbteTipo, docNro, ultimoAutorizado, fecha, importe_total, importe_gravado, importe_iva, docTipo, condicion);
+            const response = await this.retryIfConnReset(
+                () => this.wsfe.FECAESolicitar(factura),
+                3,
+                "FECAESolicitar (facturaB)"
+            );
+            return {
+                CAE: response.FECAESolicitarResult.FeDetResp.FECAEDetResponse[0].CAE,
+                vtoCAE: response.FECAESolicitarResult.FeDetResp.FECAEDetResponse[0].CAEFchVto,
+                numeroComprobante: ultimoAutorizado + 1,
+                docTipo,
+                importe_total,
+                importe_gravado,
+                importe_iva,
+            };
+        } catch (error) {
+            console.error('Error en afipService.facturaB:', error.message);
+            throw error;
         }
     }
 
@@ -172,7 +218,11 @@ class AfipService {
             PtoVta: this.ptoVta,
             Nro: facturaNumero,
         });
-        const response = await this.wsfe.FECAESolicitar(factura);
+        const response = await this.retryIfConnReset(
+            () => this.wsfe.FECAESolicitar(factura),
+            3,
+            "FECAESolicitar (notaCreditoA)"
+        );
         console.dir(response, { depth: null });
         return {
             CAE: response.FECAESolicitarResult.FeDetResp.FECAEDetResponse[0].CAE,
@@ -195,7 +245,11 @@ class AfipService {
             PtoVta: this.ptoVta,
             Nro: facturaNumero,
         });
-        const response = await this.wsfe.FECAESolicitar(factura);
+        const response = await this.retryIfConnReset(
+            () => this.wsfe.FECAESolicitar(factura),
+            3,
+            "FECAESolicitar (notaCreditoB)"
+        );
         console.dir(response, { depth: null });
         return {
             CAE: response.FECAESolicitarResult.FeDetResp.FECAEDetResponse[0].CAE,
@@ -210,8 +264,6 @@ class AfipService {
         const response = await this.wsfe.FEParamGetCondicionIvaReceptor();
         console.dir(response, { depth: null });
     };
-
-
 
     getCurrentDate() {
         return new Date(Date.now() - ((new Date()).getTimezoneOffset() * 60000)).toISOString().split('T')[0];

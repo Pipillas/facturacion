@@ -25,7 +25,7 @@ const io = new Server(server, {
     },
 });
 
-//afipService.getTiposIva();
+//afipService.getCondicionIvaReceptor();
 
 // Define la carpeta desde donde se servirán los archivos
 const directoryPath = path.join(__dirname, 'comprobantes');
@@ -517,61 +517,71 @@ io.on("connection", (socket) => {
         const practicas = await Practica.find().sort({ createdAt: -1 });
         socket.emit("response-practicas", practicas);
     });
-    socket.on("facturar", async (practicas, datos) => {
-        datos.practicas = practicas;
-        datos.total = 0;
-        datos.practicas?.forEach((pr) => {
-            datos.total += pr.total;
-        });
-        if (datos.condicion === "CONSUMIDOR FINAL" || datos.condicion === "IVA EXENTO") {
-            if (datos.numDoc === "") {
-                datos.numDoc = 0;
+    socket.on("facturar", async (practicas, datos, callback) => {
+        try {
+            datos.practicas = practicas;
+            datos.total = 0;
+            datos.practicas?.forEach((pr) => {
+                datos.total += pr.total;
+            });
+            if (datos.condicion === "CONSUMIDOR FINAL" || datos.condicion === "IVA EXENTO") {
+                if (datos.numDoc === "") {
+                    datos.numDoc = 0;
+                }
+                let response = await afipService.facturaB(datos.total, datos.numDoc, datos.condicion);
+                if (response.CAE && response.vtoCAE) {
+                    const today = new Date();
+                    const year = today.getFullYear();
+                    const month = (today.getMonth() + 1).toString().padStart(2, "0");
+                    const day = today.getDate().toString().padStart(2, "0");
+                    let formattedDateString = year + "-" + month + "-" + day;
+                    let object = {
+                        ver: 1,
+                        fecha: formattedDateString,
+                        cuit: CUIT,
+                        ptoVta: 2,
+                        tipoCmp: 6,
+                        nroCmp: response.numeroComprobante,
+                        importe: parseFloat(response.importe_total),
+                        moneda: "PES",
+                        ctz: 1,
+                        tipoDocRec: response.docTipo,
+                        nroDocRec: parseFloat(datos.numDoc),
+                        tipoCodAut: "E",
+                        codAut: parseInt(response.CAE),
+                    };
+                    const jsonString = JSON.stringify(object);
+                    const buffer = Buffer.from(jsonString, "utf-8");
+                    const base64String = buffer.toString("base64");
+                    let qr_svg = qr.image(
+                        `https://serviciosweb.afip.gob.ar/genericos/comprobantes/cae.aspx?p=${base64String}`,
+                        { type: "png" }
+                    );
+                    qr_svg.pipe(fs.createWriteStream(path.join(__dirname, 'images', 'qr-afip.png')));
+                    try {
+                        datos.pathO = await crearPDF('ORIGINAL', 6, response.numeroComprobante, datos.numDoc, datos.condicion, datos.nombre, datos.domicilio, datos.practicas, response.importe_total, response.importe_gravado, response.importe_iva, response.CAE, response.vtoCAE);
+                        datos.pathD = await crearPDF('DUPLICADO', 6, response.numeroComprobante, datos.numDoc, datos.condicion, datos.nombre, datos.domicilio, datos.practicas, response.importe_total, response.importe_gravado, response.importe_iva, response.CAE, response.vtoCAE);
+                    } catch (error) {
+                        console.log(error);
+                    }
+                    datos.cae = response.CAE;
+                    datos.vtoCAE = response.vtoCAE;
+                    await Comprobante.create(datos);
+                    callback({ status: 'ok', message: 'Comprobante generado correctamente' })
+                } else {
+                    callback({ status: 'error', message: 'No se pudo generar CAE y vtoCAE, comunicarse con Mas Damian' })
+                }
+                //FACTURA B
+            } else if (
+                datos.condicion === "RESPONSABLE INSCRIPTO" ||
+                datos.condicion === "MONOTRIBUTO"
+            ) {
+                //let response = await afipService.facturaA(datos.total, datos.numDoc);
+                //FACTURA A
             }
-            let response = await afipService.facturaB(datos.total, datos.numDoc, datos.condicion);
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = (today.getMonth() + 1).toString().padStart(2, "0");
-            const day = today.getDate().toString().padStart(2, "0");
-            let formattedDateString = year + "-" + month + "-" + day;
-            let object = {
-                ver: 1,
-                fecha: formattedDateString,
-                cuit: CUIT,
-                ptoVta: 2,
-                tipoCmp: 6,
-                nroCmp: response.numeroComprobante,
-                importe: parseFloat(response.importe_total),
-                moneda: "PES",
-                ctz: 1,
-                tipoDocRec: response.docTipo,
-                nroDocRec: parseFloat(datos.numDoc),
-                tipoCodAut: "E",
-                codAut: parseInt(response.CAE),
-            };
-            const jsonString = JSON.stringify(object);
-            const buffer = Buffer.from(jsonString, "utf-8");
-            const base64String = buffer.toString("base64");
-            let qr_svg = qr.image(
-                `https://serviciosweb.afip.gob.ar/genericos/comprobantes/cae.aspx?p=${base64String}`,
-                { type: "png" }
-            );
-            qr_svg.pipe(fs.createWriteStream(path.join(__dirname, 'images', 'qr-afip.png')));
-            try {
-                datos.pathO = await crearPDF('ORIGINAL', 6, response.numeroComprobante, datos.numDoc, datos.condicion, datos.nombre, datos.domicilio, datos.practicas, response.importe_total, response.importe_gravado, response.importe_iva, response.CAE, response.vtoCAE);
-                datos.pathD = await crearPDF('DUPLICADO', 6, response.numeroComprobante, datos.numDoc, datos.condicion, datos.nombre, datos.domicilio, datos.practicas, response.importe_total, response.importe_gravado, response.importe_iva, response.CAE, response.vtoCAE);
-            } catch (error) {
-                console.log(error);
-            }
-            datos.cae = response.CAE;
-            datos.vtoCAE = response.vtoCAE;
-            await Comprobante.create(datos);
-            //FACTURA B
-        } else if (
-            datos.condicion === "RESPONSABLE INSCRIPTO" ||
-            datos.condicion === "MONOTRIBUTO"
-        ) {
-            //let response = await afipService.facturaA(datos.total, datos.numDoc);
-            //FACTURA A
+        } catch (error) {
+            //console.error('Error durante socket "facturar":', error.message);
+            //socket.emit("error-afip", { message: error.message });
         }
     });
     socket.on("request-persona", async (numDoc) => {
@@ -641,7 +651,6 @@ io.on("connection", (socket) => {
         const comprobantes = await Comprobante.find(query).sort({ createdAt: -1 });
         socket.emit('response-comprobantes', comprobantes);
     });
-
 });
 
 

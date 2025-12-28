@@ -108,11 +108,13 @@ function App() {
       total: practica.valor * practica.cantidad, // Calcular total por práctica
     }));
 
-    socket.emit('facturar', datosPracticas, datos);
-
-    await new Promise(res => setTimeout(res, 2000));
-
-    window.location.reload();
+    socket.emit('facturar', datosPracticas, datos, (res) => {
+      if (res.status === 'error') {
+        alert(res.message);
+      } else if (res.status === 'ok') {
+        window.location.reload();
+      }
+    });
   };
 
   // Manejar cambios en el formulario
@@ -269,8 +271,24 @@ function App() {
                     className="td-input"
                   />
                 </td>
-                <td>{practica.label}</td>
+
+                {/* AHORA EL NOMBRE ES EDITABLE */}
+                <td>
+                  <input
+                    type="text"
+                    value={practica.label}
+                    onChange={(e) => {
+                      const updatedPracticas = [...selectedPracticas];
+                      updatedPracticas[index].label = e.target.value;
+                      setSelectedPracticas(updatedPracticas);
+                    }}
+                    className="td-input"
+                    autoComplete="off"
+                  />
+                </td>
+
                 <td>{practica.iva}%</td>
+
                 <td>
                   <NumericFormat
                     value={practica.valor}
