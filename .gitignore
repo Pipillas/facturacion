@@ -1,5 +1,7 @@
 backend/src/comprobantes/
 backend/src/images/
+backend/src/index.html
+backend/src/ws_sr_constancia_inscripcion_ta.xml
+backend/src/wsfe_ta.xml
 backend/node_modules/
 frontend/node_modules/
-backend/src/index.html
