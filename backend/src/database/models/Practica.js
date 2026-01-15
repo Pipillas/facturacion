@@ -1,3 +1,4 @@
+//backend/src/database/models/Practica.js
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 

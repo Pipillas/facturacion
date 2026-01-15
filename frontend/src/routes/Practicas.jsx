@@ -1,3 +1,4 @@
+//frontend/src/routes/Practicas.jsx
 import { useState, useEffect } from 'react';
 import { NumericFormat } from 'react-number-format';
 import '../styles/practicas.css';

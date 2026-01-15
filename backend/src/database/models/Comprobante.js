@@ -1,3 +1,4 @@
+//backend/src/database/models/Comprobante.js
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
@@ -28,7 +29,7 @@ const Factura = new Schema(
             type: Boolean,
         },
         practicas: {
-            type: Array
+            type: Array,
         },
         total: {
             type: Number,
@@ -44,7 +45,15 @@ const Factura = new Schema(
         },
         vtoCAE: {
             type: String,
-        }
+        },
+
+        // ✅ NUEVO: datos AFIP
+        cbteTipo: { type: Number }, // 6 Factura B, 8 Nota de Crédito B, etc.
+        nroCmp: { type: Number }, // número de comprobante
+
+        // ✅ NUEVO: flags/referencias para NC
+        esNotaCredito: { type: Boolean, default: false },
+        facturaAsociadaId: { type: Schema.Types.ObjectId, ref: "Factura", default: null },
     },
     { timestamps: true }
 );

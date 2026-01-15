@@ -1,16 +1,17 @@
+//backend/src/index.js
 require("./database/database.js");
-const express = require('express');
+const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const Practica = require("./database/models/Practica.js");
 const Comprobante = require("./database/models/Comprobante.js");
 const AfipService = require("./AfipService.js");
 const path = require("path");
-const { chromium } = require('playwright');
-const fs = require('fs');
-const qr = require('qr-image');
+const { chromium } = require("playwright");
+const fs = require("fs");
+const qr = require("qr-image");
 const { print } = require("pdf-to-printer");
-const ExcelJS = require('exceljs');
+const ExcelJS = require("exceljs");
 
 const CUIT = 30712465871;
 
@@ -20,25 +21,35 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: "*", // Cambia esto si usas un dominio diferente
+        origin: "*",
         methods: ["GET", "POST"],
     },
 });
 
-//afipService.getCondicionIvaReceptor();
-
 // Define la carpeta desde donde se servirán los archivos
-const directoryPath = path.join(__dirname, 'comprobantes');
-
-// Usa el middleware express.static para servir archivos de la carpeta
+const directoryPath = path.join(__dirname, "comprobantes");
 app.use(express.static(directoryPath));
 
-async function crearPDF(copia, codigoFactura, numeroComprobante, docNro, condIva, nombre, domicilio, practicas, importe_total, importe_gravado, importe_iva, CAE, vtoCAE) {
+async function crearPDF({
+    copia,
+    codigoComprobante, // 6 factura B, 8 nota crédito B, etc.
+    tituloComprobante, // "FACTURA" / "NOTA DE CRÉDITO"
+    numeroComprobante,
+    docNro,
+    condIva,
+    nombre,
+    domicilio,
+    practicas,
+    importe_total,
+    importe_gravado,
+    importe_iva,
+    CAE,
+    vtoCAE,
+}) {
     const style = `
     <style>
       .container {
         margin-left: 9px;
-        /* margin-top: 2px; */
         width: 20cm;
         height: 14.01cm;
         border: 1px solid;
@@ -327,29 +338,32 @@ async function crearPDF(copia, codigoFactura, numeroComprobante, docNro, condIva
         text-align: right;
         padding-left: 2.6cm;
     }
-        </style>`;
+    </style>`;
+
+    const letra = codigoComprobante === 6 || codigoComprobante === 8 ? "B" : "A";
+
     const htmlContent = `
     <!DOCTYPE html>
     <html lang="en">
-    
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Document</title>
-      ${style}
-  </head>
-  
-  <body>
+        <title>Document</title>
+        ${style}
+    </head>
+    <body>
       <div class="container">
           <div class="cajaOriginal">
               <div class="original">${copia}</div>
           </div>
+
           <div class="cajaGrande">
               <div class="cajaB">
-                  <div class="b">${codigoFactura === 6 ? "B" : "A"}</div>
-                  <div class="cod">COD. 00${codigoFactura}</div>
+                  <div class="b">${letra}</div>
+                  <div class="cod">COD. 00${codigoComprobante}</div>
               </div>
               <div class="lineaDivisoria"></div>
+
               <div class="contenidoCajaGrande">
                   <div class="cajaDiseño">
                       <div class="titulo">RX CONSULTORIO <br> 11 de Abril 130</div>
@@ -363,8 +377,9 @@ async function crearPDF(copia, codigoFactura, numeroComprobante, docNro, condIva
                       </div>
                       <div class="infoDiseño">Condición frente al IVA:&nbsp; &nbsp;IVA Responsable Inscripto</div>
                   </div>
+
                   <div class="cajaFactura">
-                      <div class="factura">FACTURA</div>
+                      <div class="factura">${tituloComprobante}</div>
                       <div class="nroFactura">
                           <div class="nroOrden">
                               <div>Punto de Venta:</div>
@@ -372,15 +387,15 @@ async function crearPDF(copia, codigoFactura, numeroComprobante, docNro, condIva
                           </div>
                           <div class="nroOrden">
                               <div>Comp. Nro:</div>
-                              <div class="nroDatos">${numeroComprobante
-            .toString()
-            .padStart(8, "0")}</div>
+                              <div class="nroDatos">${numeroComprobante.toString().padStart(8, "0")}</div>
                           </div>
                       </div>
+
                       <div class="contenedorDatosAFIP datosAFIP">
                           <div>Fecha de Emisión:</div>
                           <div class="infoFecha">${new Date().toLocaleDateString()}</div>
                       </div>
+
                       <div class="contenedorDatosAFIP">
                           <div class="datosAFIP">CUIT:</div>
                           <div class="datosAFIPcontenido">30-71246587-1</div>
@@ -396,12 +411,12 @@ async function crearPDF(copia, codigoFactura, numeroComprobante, docNro, condIva
                   </div>
               </div>
           </div>
+
           <div class="cajaCliente">
               <div class="grupo1">
                   <div class="cliente">
                       <div class="tituloCliente">CUIT/DNI:</div>
-                      <div class="contenidoCliente">${docNro === 0 ? "" : docNro
-        }</div>
+                      <div class="contenidoCliente">${docNro === 0 ? "" : docNro}</div>
                   </div>
                   <div class="cliente">
                       <div class="tituloCliente">Condición frente al IVA:</div>
@@ -415,94 +430,105 @@ async function crearPDF(copia, codigoFactura, numeroComprobante, docNro, condIva
                   </div>
                   <div class="cliente">
                       <div class="tituloCliente">Domicilio:</div>
-                      <div class="contenidoCliente">${domicilio ? domicilio : ''}</div>
+                      <div class="contenidoCliente">${domicilio ? domicilio : ""}</div>
                   </div>
               </div>
           </div>
+
           <div class="tabla">
               <table>
                   <thead>
                       <tr>
                           <th class="descripcion">Descripción</th>
-                          <th class="subtotales">${codigoFactura == 6 ? "" : "Subtotal"}</th>
-                          <th class="subtotales">${codigoFactura == 6 ? "Subtotal" : "Subtotal C/IVA"}</th>
+                          <th class="subtotales">${codigoComprobante == 6 || codigoComprobante == 8 ? "" : "Subtotal"}</th>
+                          <th class="subtotales">${codigoComprobante == 6 || codigoComprobante == 8 ? "Subtotal" : "Subtotal C/IVA"}</th>
                       </tr>
                   </thead>
-                    <tbody>
-                    ${practicas?.map((prac) => `
+                  <tbody>
+                    ${practicas
+            ?.map(
+                (prac) => `
                       <tr>
-                         <td class="tdDescripcion"> ${prac.cantidad} x ${prac.label}</td>
-                        <td class="tdSubtotales">${codigoFactura == 6 ? "" : `$${(prac.total / 1.21).toLocaleString('es-AR')}`}</td>
-             <td class="tdSubtotales">$${prac.total.toLocaleString('es-AR')}</td>
-    </tr>`).join('')}
-</tbody>
+                        <td class="tdDescripcion">${prac.cantidad} x ${prac.label}</td>
+                        <td class="tdSubtotales">${codigoComprobante == 6 || codigoComprobante == 8
+                        ? ""
+                        : `$${(prac.total / 1.21).toLocaleString("es-AR")}`
+                    }</td>
+                        <td class="tdSubtotales">$${prac.total.toLocaleString("es-AR")}</td>
+                      </tr>`
+            )
+            .join("")}
+                  </tbody>
               </table>
           </div>
+
           <div class="contenedorFooter">
               <div class="divQR">
                   <img class="qr" src="./images/qr-afip.png" alt="">
                   <div>
                       <div class="CAE comprobanteAutorizado">Comprobante Autorizado</div>
                       <div class="contenedorCAE">
-                          <div class="CAE">
-                              CAE:
-                          </div>
-                          <div class="infoCAE">
-                              ${CAE}
-                          </div>
+                          <div class="CAE">CAE:</div>
+                          <div class="infoCAE">${CAE}</div>
                       </div>
                       <div class="contenedorCAE">
-                          <div class="CAE">
-                              Vencimiento CAE:
-                          </div>
-                          <div class="infoCAE">
-                              ${vtoCAE}
-                          </div>
+                          <div class="CAE">Vencimiento CAE:</div>
+                          <div class="infoCAE">${vtoCAE}</div>
                       </div>
                   </div>
               </div>
+
               <div class="divTotal">
                   <div class="grupoTitulos">
-                      <div class="importeTitulo">${codigoFactura == 6
-            ? "Subtotal"
-            : "Importe Neto Gravado:"
+                      <div class="importeTitulo">${codigoComprobante == 6 || codigoComprobante == 8 ? "Subtotal" : "Importe Neto Gravado:"
         }</div>
-                      <div class="importeTitulo">${codigoFactura == 6 ? "" : "IVA 21%:"
-        }</div>
+                      <div class="importeTitulo">${codigoComprobante == 6 || codigoComprobante == 8 ? "" : "IVA 21%:"}</div>
                       <div class="importeTitulo">Importe Total:</div>
                   </div>
                   <div>
-                      <div class="infoImporte">$${codigoFactura == 6 ? parseFloat(importe_total).toLocaleString('es-AR') : parseFloat(importe_gravado).toLocaleString('es-AR')
+                      <div class="infoImporte">$${(codigoComprobante == 6 || codigoComprobante == 8
+            ? parseFloat(importe_total)
+            : parseFloat(importe_gravado)
+        ).toLocaleString("es-AR")}</div>
+
+                      <div class="infoImporte">${codigoComprobante == 6 || codigoComprobante == 8
+            ? ""
+            : `$${parseFloat(importe_iva).toLocaleString("es-AR")}`
         }</div>
-                      <div class="infoImporte">${codigoFactura == 6 ? "" : `$${parseFloat(importe_iva).toLocaleString('es-AR')}`
-        }</div>
-                      <div class="infoImporte">$${parseFloat(importe_total).toLocaleString('es-AR')}</div>
+
+                      <div class="infoImporte">$${parseFloat(importe_total).toLocaleString("es-AR")}</div>
                   </div>
               </div>
           </div>
       </div>
-  
-  </body>
-  
+    </body>
     </html>`;
-    const browser = await chromium.launch({ headless: true }); // Headless true para no mostrar el navegador
+
+    const browser = await chromium.launch({ headless: true });
     const page = await browser.newPage();
-    fs.writeFileSync(path.join(__dirname, 'index.html'), htmlContent);
-    const htmlPath = path.join(__dirname, 'index.html');
+
+    fs.writeFileSync(path.join(__dirname, "index.html"), htmlContent);
+    const htmlPath = path.join(__dirname, "index.html");
     await page.goto(htmlPath);
-    const comprobanteNombre = `F${codigoFactura === 6 ? "B" : "A"}-${numeroComprobante}-${copia === "ORIGINAL" ? "O" : "D"}.pdf`;
-    const pathPDF = path.join(__dirname, 'comprobantes', comprobanteNombre);
+
+    const prefijo = codigoComprobante === 8 || codigoComprobante === 3 ? "NC" : "F";
+    const comprobanteNombre = `${prefijo}${letra}-${numeroComprobante}-${copia === "ORIGINAL" ? "O" : "D"}.pdf`;
+    const pathPDF = path.join(__dirname, "comprobantes", comprobanteNombre);
+
     await page.pdf({
         path: pathPDF,
         format: "A4",
         printBackground: true,
     });
+
     await browser.close();
-    if (copia === 'DUPLICADO') {
+
+    if (copia === "DUPLICADO") {
         await print(pathPDF);
     }
+
     return comprobanteNombre;
-};
+}
 
 io.on("connection", (socket) => {
     socket.on("guardar-practica", async (practica) => {
@@ -513,10 +539,12 @@ io.on("connection", (socket) => {
         }
         io.emit("cambios");
     });
+
     socket.on("request-practicas", async () => {
         const practicas = await Practica.find().sort({ createdAt: -1 });
         socket.emit("response-practicas", practicas);
     });
+
     socket.on("facturar", async (practicas, datos, callback) => {
         try {
             datos.practicas = practicas;
@@ -524,17 +552,21 @@ io.on("connection", (socket) => {
             datos.practicas?.forEach((pr) => {
                 datos.total += pr.total;
             });
+
             if (datos.condicion === "CONSUMIDOR FINAL" || datos.condicion === "IVA EXENTO") {
                 if (datos.numDoc === "") {
                     datos.numDoc = 0;
                 }
+
                 let response = await afipService.facturaB(datos.total, datos.numDoc, datos.condicion);
+
                 if (response.CAE && response.vtoCAE) {
                     const today = new Date();
                     const year = today.getFullYear();
                     const month = (today.getMonth() + 1).toString().padStart(2, "0");
                     const day = today.getDate().toString().padStart(2, "0");
                     let formattedDateString = year + "-" + month + "-" + day;
+
                     let object = {
                         ver: 1,
                         fecha: formattedDateString,
@@ -550,51 +582,94 @@ io.on("connection", (socket) => {
                         tipoCodAut: "E",
                         codAut: parseInt(response.CAE),
                     };
+
                     const jsonString = JSON.stringify(object);
                     const buffer = Buffer.from(jsonString, "utf-8");
                     const base64String = buffer.toString("base64");
+
                     let qr_svg = qr.image(
                         `https://serviciosweb.afip.gob.ar/genericos/comprobantes/cae.aspx?p=${base64String}`,
                         { type: "png" }
                     );
-                    qr_svg.pipe(fs.createWriteStream(path.join(__dirname, 'images', 'qr-afip.png')));
+                    qr_svg.pipe(fs.createWriteStream(path.join(__dirname, "images", "qr-afip.png")));
+
                     try {
-                        datos.pathO = await crearPDF('ORIGINAL', 6, response.numeroComprobante, datos.numDoc, datos.condicion, datos.nombre, datos.domicilio, datos.practicas, response.importe_total, response.importe_gravado, response.importe_iva, response.CAE, response.vtoCAE);
-                        datos.pathD = await crearPDF('DUPLICADO', 6, response.numeroComprobante, datos.numDoc, datos.condicion, datos.nombre, datos.domicilio, datos.practicas, response.importe_total, response.importe_gravado, response.importe_iva, response.CAE, response.vtoCAE);
+                        datos.pathO = await crearPDF({
+                            copia: "ORIGINAL",
+                            codigoComprobante: 6,
+                            tituloComprobante: "FACTURA",
+                            numeroComprobante: response.numeroComprobante,
+                            docNro: datos.numDoc,
+                            condIva: datos.condicion,
+                            nombre: datos.nombre,
+                            domicilio: datos.domicilio,
+                            practicas: datos.practicas,
+                            importe_total: response.importe_total,
+                            importe_gravado: response.importe_gravado,
+                            importe_iva: response.importe_iva,
+                            CAE: response.CAE,
+                            vtoCAE: response.vtoCAE,
+                        });
+
+                        datos.pathD = await crearPDF({
+                            copia: "DUPLICADO",
+                            codigoComprobante: 6,
+                            tituloComprobante: "FACTURA",
+                            numeroComprobante: response.numeroComprobante,
+                            docNro: datos.numDoc,
+                            condIva: datos.condicion,
+                            nombre: datos.nombre,
+                            domicilio: datos.domicilio,
+                            practicas: datos.practicas,
+                            importe_total: response.importe_total,
+                            importe_gravado: response.importe_gravado,
+                            importe_iva: response.importe_iva,
+                            CAE: response.CAE,
+                            vtoCAE: response.vtoCAE,
+                        });
                     } catch (error) {
                         console.log(error);
                     }
+
                     datos.cae = response.CAE;
                     datos.vtoCAE = response.vtoCAE;
+
+                    // ✅ NUEVO: guardar info AFIP
+                    datos.cbteTipo = 6;
+                    datos.nroCmp = response.numeroComprobante;
+                    datos.esNotaCredito = false;
+                    datos.facturaAsociadaId = null;
+
                     await Comprobante.create(datos);
-                    callback({ status: 'ok', message: 'Comprobante generado correctamente' })
+                    callback({ status: "ok", message: "Comprobante generado correctamente" });
                 } else {
-                    callback({ status: 'error', message: 'No se pudo generar CAE y vtoCAE, comunicarse con Mas Damian' })
+                    callback({
+                        status: "error",
+                        message: "No se pudo generar CAE y vtoCAE, comunicarse con Mas Damian",
+                    });
                 }
-                //FACTURA B
-            } else if (
-                datos.condicion === "RESPONSABLE INSCRIPTO" ||
-                datos.condicion === "MONOTRIBUTO"
-            ) {
-                //let response = await afipService.facturaA(datos.total, datos.numDoc);
-                //FACTURA A
+            } else if (datos.condicion === "RESPONSABLE INSCRIPTO" || datos.condicion === "MONOTRIBUTO") {
+                // FACTURA A (pendiente)
             }
         } catch (error) {
-            //console.error('Error durante socket "facturar":', error.message);
-            //socket.emit("error-afip", { message: error.message });
+            // silencioso como estaba
         }
     });
+
     socket.on("request-persona", async (numDoc) => {
         try {
             const data = await afipService.getPersona(numDoc);
             let condIva = "CONSUMIDOR FINAL";
+
             const nombreCompleto =
                 (data.personaReturn.datosGenerales.apellido || "") +
                 " " +
                 (data.personaReturn.datosGenerales.nombre || "");
+
             const nombre = nombreCompleto.trim()
                 ? nombreCompleto
                 : data.personaReturn.datosGenerales.razonSocial;
+
             if (data.personaReturn.hasOwnProperty("datosMonotributo")) {
                 condIva = "MONOTRIBUTO";
             } else if (data.personaReturn.hasOwnProperty("datosRegimenGeneral")) {
@@ -606,6 +681,7 @@ io.on("connection", (socket) => {
                     }
                 }
             }
+
             const info = {
                 nombre: nombre,
                 domicilio:
@@ -613,117 +689,229 @@ io.on("connection", (socket) => {
                     ", " +
                     data.personaReturn.datosGenerales.domicilioFiscal.localidad +
                     ", " +
-                    data.personaReturn.datosGenerales.domicilioFiscal
-                        .descripcionProvincia,
+                    data.personaReturn.datosGenerales.domicilioFiscal.descripcionProvincia,
                 condicion: condIva,
             };
-            socket.emit("response-persona", info); // Emitir `info` en lugar de `data`
+
+            socket.emit("response-persona", info);
         } catch (error) {
             console.log(error);
         }
     });
-    socket.on('borrar-practica', async (id) => {
+
+    socket.on("borrar-practica", async (id) => {
         await Practica.findByIdAndDelete(id);
-        io.emit('cambios');
-    });
-    socket.on('request-comprobantes', async () => {
-        const comprobantes = await Comprobante.find().sort({ createdAt: -1 });
-        socket.emit('response-comprobantes', comprobantes);
+        io.emit("cambios");
     });
 
-    socket.on('filter-comprobantes', async ({ startDate, endDate }) => {
+    socket.on("request-comprobantes", async () => {
+        const comprobantes = await Comprobante.find().sort({ createdAt: -1 });
+        socket.emit("response-comprobantes", comprobantes);
+    });
+
+    socket.on("filter-comprobantes", async ({ startDate, endDate }) => {
         const query = {};
 
         if (startDate && endDate) {
             const endOfDay = new Date(endDate);
-            endOfDay.setHours(23, 59, 59, 999);  // Incluye hasta el último milisegundo del día final
-
+            endOfDay.setHours(23, 59, 59, 999);
             query.createdAt = { $gte: new Date(startDate), $lte: endOfDay };
         } else if (startDate) {
             query.createdAt = { $gte: new Date(startDate) };
         } else if (endDate) {
             const endOfDay = new Date(endDate);
-            endOfDay.setHours(23, 59, 59, 999);  // Incluye el día completo si solo hay fecha de fin
-
+            endOfDay.setHours(23, 59, 59, 999);
             query.createdAt = { $lte: endOfDay };
         }
 
         const comprobantes = await Comprobante.find(query).sort({ createdAt: -1 });
-        socket.emit('response-comprobantes', comprobantes);
+        socket.emit("response-comprobantes", comprobantes);
+    });
+
+    // ✅ NUEVO: Generar Nota de Crédito desde una factura existente
+    socket.on("nota-credito", async ({ comprobanteId }, callback) => {
+        try {
+            const factura = await Comprobante.findById(comprobanteId);
+
+            if (!factura) return callback?.({ status: "error", message: "Factura no encontrada" });
+            if (factura.esNotaCredito) return callback?.({ status: "error", message: "Ese comprobante ya es una nota de crédito" });
+            if (factura.cbteTipo !== 6) return callback?.({ status: "error", message: "Por ahora solo se soporta Nota de Crédito para Factura B" });
+
+            const docNro = factura.numDoc ? Number(factura.numDoc) : 0;
+            const facturaNumero = factura.nroCmp; // ✅ número original AFIP
+            const monto = factura.total;
+
+            if (!facturaNumero) {
+                return callback?.({
+                    status: "error",
+                    message: "La factura no tiene nroCmp guardado (solo funciona para facturas nuevas con esta actualización).",
+                });
+            }
+
+            const response = await afipService.notaCreditoB(monto, docNro, facturaNumero);
+
+            if (!response?.CAE || !response?.vtoCAE) {
+                return callback?.({ status: "error", message: "No se pudo generar CAE/vtoCAE para la Nota de Crédito" });
+            }
+
+            // QR AFIP
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = (today.getMonth() + 1).toString().padStart(2, "0");
+            const day = today.getDate().toString().padStart(2, "0");
+            const formattedDateString = `${year}-${month}-${day}`;
+
+            const object = {
+                ver: 1,
+                fecha: formattedDateString,
+                cuit: CUIT,
+                ptoVta: 2,
+                tipoCmp: 8,
+                nroCmp: response.numeroComprobante,
+                importe: parseFloat(monto),
+                moneda: "PES",
+                ctz: 1,
+                tipoDocRec: response.docTipo,
+                nroDocRec: docNro,
+                tipoCodAut: "E",
+                codAut: parseInt(response.CAE),
+            };
+
+            const base64String = Buffer.from(JSON.stringify(object), "utf-8").toString("base64");
+
+            let qr_svg = qr.image(
+                `https://serviciosweb.afip.gob.ar/genericos/comprobantes/cae.aspx?p=${base64String}`,
+                { type: "png" }
+            );
+            qr_svg.pipe(fs.createWriteStream(path.join(__dirname, "images", "qr-afip.png")));
+
+            const importe_gravado = parseFloat((monto / 1.21).toFixed(2));
+            const importe_iva = parseFloat((monto - importe_gravado).toFixed(2));
+
+            const pathO = await crearPDF({
+                copia: "ORIGINAL",
+                codigoComprobante: 8,
+                tituloComprobante: "NOTA DE CRÉDITO",
+                numeroComprobante: response.numeroComprobante,
+                docNro,
+                condIva: factura.condicion,
+                nombre: factura.nombre,
+                domicilio: factura.domicilio,
+                practicas: factura.practicas,
+                importe_total: monto,
+                importe_gravado,
+                importe_iva,
+                CAE: response.CAE,
+                vtoCAE: response.vtoCAE,
+            });
+
+            const pathD = await crearPDF({
+                copia: "DUPLICADO",
+                codigoComprobante: 8,
+                tituloComprobante: "NOTA DE CRÉDITO",
+                numeroComprobante: response.numeroComprobante,
+                docNro,
+                condIva: factura.condicion,
+                nombre: factura.nombre,
+                domicilio: factura.domicilio,
+                practicas: factura.practicas,
+                importe_total: monto,
+                importe_gravado,
+                importe_iva,
+                CAE: response.CAE,
+                vtoCAE: response.vtoCAE,
+            });
+
+            await Comprobante.create({
+                tipoDoc: factura.tipoDoc,
+                numDoc: factura.numDoc,
+                nombre: factura.nombre,
+                medio: factura.medio,
+                condicion: factura.condicion,
+                domicilio: factura.domicilio,
+                telefono: factura.telefono,
+                mypymes: factura.mypymes,
+                practicas: factura.practicas,
+                total: factura.total,
+
+                pathO,
+                pathD,
+                cae: response.CAE,
+                vtoCAE: response.vtoCAE,
+
+                cbteTipo: 8,
+                nroCmp: response.numeroComprobante,
+
+                esNotaCredito: true,
+                facturaAsociadaId: factura._id,
+            });
+
+            io.emit("cambios");
+            callback?.({ status: "ok", message: "Nota de crédito generada correctamente" });
+        } catch (err) {
+            console.error("Error en nota-credito:", err);
+            callback?.({ status: "error", message: "Error generando nota de crédito" });
+        }
     });
 });
 
-
-// Aquí agregas la nueva ruta para exportar comprobantes
-app.get('/export-comprobantes', async (req, res) => {
+// Exportar comprobantes a Excel
+app.get("/export-comprobantes", async (req, res) => {
     const { startDate, endDate } = req.query;
     const query = {};
 
-    // Ajuste para incluir todo el día final
     if (startDate && endDate) {
         const endOfDay = new Date(endDate);
-        endOfDay.setHours(23, 59, 59, 999);  // Incluye hasta el último milisegundo del día
-
+        endOfDay.setHours(23, 59, 59, 999);
         query.createdAt = { $gte: new Date(startDate), $lte: endOfDay };
     } else if (startDate) {
         query.createdAt = { $gte: new Date(startDate) };
     } else if (endDate) {
         const endOfDay = new Date(endDate);
         endOfDay.setHours(23, 59, 59, 999);
-
         query.createdAt = { $lte: endOfDay };
     }
 
     const comprobantes = await Comprobante.find(query).sort({ createdAt: 1 });
 
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet('Comprobantes');
+    const worksheet = workbook.addWorksheet("Comprobantes");
 
-    // Definir los encabezados de las columnas
     worksheet.columns = [
-        { header: 'Fecha', key: 'createdAt', width: 20 },
-        { header: 'Comprobante', key: 'pathO', width: 30 },
-        { header: 'Cliente', key: 'nombre', width: 30 },
-        { header: 'Documento', key: 'numDoc', width: 20 },
-        { header: 'Medio de Pago', key: 'medio', width: 20 },  // Nueva columna para el medio de pago
-        { header: 'Total', key: 'total', width: 15 },
+        { header: "Fecha", key: "createdAt", width: 20 },
+        { header: "Comprobante", key: "pathO", width: 30 },
+        { header: "Cliente", key: "nombre", width: 30 },
+        { header: "Documento", key: "numDoc", width: 20 },
+        { header: "Medio de Pago", key: "medio", width: 20 },
+        { header: "Total", key: "total", width: 15 },
     ];
 
-
-    // Agregar los datos de los comprobantes
-    comprobantes.forEach(comp => {
+    comprobantes.forEach((comp) => {
         worksheet.addRow({
             createdAt: new Date(comp.createdAt).toLocaleDateString(),
-            pathO: comp.pathO.replace('-O.pdf', ''),
+            pathO: comp.pathO.replace("-O.pdf", ""),
             nombre: comp.nombre,
             numDoc: comp.numDoc,
-            medio: comp.medio,  // Aquí agregas el medio de pago
-            total: comp.total
+            medio: comp.medio,
+            total: comp.total,
         });
     });
 
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", "attachment; filename=comprobantes.xlsx");
 
-    // Configurar las cabeceras de la respuesta para la descarga del archivo Excel
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', 'attachment; filename=comprobantes.xlsx');
-
-    // Escribir el archivo y finalizar la respuesta
     await workbook.xlsx.write(res);
     res.end();
 });
 
-
-
-// Sirve los archivos estáticos desde la carpeta dist (compilada por Vite)
+// Frontend dist
 const distPath = path.join(__dirname, "dist");
 app.use(express.static(distPath));
-// Maneja todas las rutas del frontend para que Vite las gestione
 app.get("*", (req, res) => {
     res.sendFile(path.join(distPath, "index.html"));
 });
 
 const PORT = 3000;
-// Iniciar el servidor
 server.listen(PORT, () => {
     console.log(`Servidor escuchando en http://localhost:${PORT}`);
 });
